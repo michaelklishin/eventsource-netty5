@@ -2,19 +2,22 @@ package com.github.eventsource.client;
 
 import com.github.eventsource.client.impl.AsyncEventSourceHandler;
 import com.github.eventsource.client.impl.netty.EventSourceChannelHandler;
-import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
-import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
-import org.jboss.netty.handler.codec.frame.Delimiters;
-import org.jboss.netty.handler.codec.http.HttpRequestEncoder;
-import org.jboss.netty.handler.codec.string.StringDecoder;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
+import io.netty.handler.codec.Delimiters;
+import io.netty.handler.codec.http.HttpRequestEncoder;
+import io.netty.handler.codec.string.StringDecoder;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.nio.channels.Channels;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -25,7 +28,7 @@ public class EventSource  {
     public static final int OPEN = 1;
     public static final int CLOSED = 2;
 
-    private final ClientBootstrap bootstrap;
+    private final Bootstrap bootstrap;
     private final EventSourceChannelHandler clientHandler;
 
     private int readyState;
@@ -44,25 +47,26 @@ public class EventSource  {
      * @see #close()
      */
     public EventSource(Executor executor, long reconnectionTimeMillis, final URI uri, EventSourceHandler eventSourceHandler) {
-        bootstrap = new ClientBootstrap(
-                new NioClientSocketChannelFactory(
-                        Executors.newSingleThreadExecutor(),
-                        Executors.newSingleThreadExecutor()));
-        bootstrap.setOption("remoteAddress", new InetSocketAddress(uri.getHost(), uri.getPort()));
+        EventLoopGroup group = new NioEventLoopGroup();
+
+        bootstrap = new Bootstrap();
 
         clientHandler = new EventSourceChannelHandler(new AsyncEventSourceHandler(executor, eventSourceHandler), reconnectionTimeMillis, bootstrap, uri);
 
-        bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-            public ChannelPipeline getPipeline() throws Exception {
-                ChannelPipeline pipeline = Channels.pipeline();
-                pipeline.addLast("line", new DelimiterBasedFrameDecoder(Integer.MAX_VALUE, Delimiters.lineDelimiter()));
-                pipeline.addLast("string", new StringDecoder());
-
-                pipeline.addLast("encoder", new HttpRequestEncoder());
-                pipeline.addLast("es-handler", clientHandler);
-                return pipeline;
-            }
-        });
+        bootstrap.
+            group(group).
+            channel(NioSocketChannel.class).
+            remoteAddress(new InetSocketAddress(uri.getHost(), uri.getPort())).
+            handler(new ChannelInitializer<SocketChannel>() {
+                @Override
+                public void initChannel(SocketChannel channel) throws Exception {
+                    ChannelPipeline pipeline = channel.pipeline();
+                    pipeline.addLast("line", new DelimiterBasedFrameDecoder(Integer.MAX_VALUE, Delimiters.lineDelimiter()));
+                    pipeline.addLast("string", new StringDecoder());
+                    pipeline.addLast("encoder", new HttpRequestEncoder());
+                    pipeline.addLast("es-handler", clientHandler);
+                }
+            });
     }
 
     public EventSource(String uri, EventSourceHandler eventSourceHandler) {
@@ -73,9 +77,10 @@ public class EventSource  {
         this(Executors.newSingleThreadExecutor(), DEFAULT_RECONNECTION_TIME_MILLIS, uri, eventSourceHandler);
     }
 
-    public ChannelFuture connect() {
+    public ChannelFuture connect() throws InterruptedException {
         readyState = CONNECTING;
-        return bootstrap.connect();
+        ChannelFuture channel = bootstrap.connect().sync();
+        return channel.channel().closeFuture().sync();
     }
 
     /**

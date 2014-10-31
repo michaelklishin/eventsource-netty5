@@ -2,19 +2,20 @@ package com.github.eventsource.client.impl.netty;
 
 import com.github.eventsource.client.EventSourceException;
 import com.github.eventsource.client.EventSourceHandler;
+import com.github.eventsource.client.MessageEvent;
 import com.github.eventsource.client.impl.ConnectionHandler;
 import com.github.eventsource.client.impl.EventStreamParser;
-import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.channel.*;
-import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
-import org.jboss.netty.handler.codec.http.HttpHeaders.Names;
-import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.HttpVersion;
-import org.jboss.netty.util.HashedWheelTimer;
-import org.jboss.netty.util.Timeout;
-import org.jboss.netty.util.Timer;
-import org.jboss.netty.util.TimerTask;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.http.DefaultHttpRequest;
+import io.netty.handler.codec.http.HttpHeaders.Names;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpVersion;
+import io.netty.util.*;
 
 import java.net.ConnectException;
 import java.net.URI;
@@ -23,12 +24,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler implements ConnectionHandler {
+public class EventSourceChannelHandler extends SimpleChannelInboundHandler<ByteBuf> implements ConnectionHandler {
     private static final Pattern STATUS_PATTERN = Pattern.compile("HTTP/1.1 (\\d+) (.*)");
     private static final Pattern CONTENT_TYPE_PATTERN = Pattern.compile("Content-Type: text/event-stream");
 
     private final EventSourceHandler eventSourceHandler;
-    private final ClientBootstrap bootstrap;
+    private final Bootstrap bootstrap;
     private final URI uri;
     private final EventStreamParser messageDispatcher;
 
@@ -42,7 +43,7 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
     private Integer status;
     private AtomicBoolean reconnecting = new AtomicBoolean(false);
 
-    public EventSourceChannelHandler(EventSourceHandler eventSourceHandler, long reconnectionTimeMillis, ClientBootstrap bootstrap, URI uri) {
+    public EventSourceChannelHandler(EventSourceHandler eventSourceHandler, long reconnectionTimeMillis, Bootstrap bootstrap, URI uri) {
         this.eventSourceHandler = eventSourceHandler;
         this.reconnectionTimeMillis = reconnectionTimeMillis;
         this.bootstrap = bootstrap;
@@ -51,39 +52,35 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
     }
 
     @Override
-    public void handleUpstream(ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
-        super.handleUpstream(ctx, e);
-    }
-
-    @Override
-    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelActive(ChannelHandlerContext context)
+    {
         HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri.toString());
-        request.addHeader(Names.ACCEPT, "text/event-stream");
-        request.addHeader(Names.HOST, uri.getHost());
-        request.addHeader(Names.ORIGIN, "http://" + uri.getHost());
-        request.addHeader(Names.CACHE_CONTROL, "no-cache");
+        request.headers().add(Names.ACCEPT, "text/event-stream");
+        request.headers().add(Names.HOST, uri.getHost());
+        request.headers().add(Names.ORIGIN, "http://" + uri.getHost());
+        request.headers().add(Names.CACHE_CONTROL, "no-cache");
+
         if (lastEventId != null) {
-            request.addHeader("Last-Event-ID", lastEventId);
+            request.headers().add("Last-Event-ID", lastEventId);
         }
-        e.getChannel().write(request);
-        channel = e.getChannel();
+
+        context.channel().write(request);
+        channel = context.channel();
     }
 
     @Override
-    public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+    public void channelInactive(ChannelHandlerContext context) throws Exception {
         channel = null;
-    }
-
-    @Override
-    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         if (reconnectOnClose) {
             reconnect();
         }
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-        String line = (String) e.getMessage();
+    public void messageReceived(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+        MessageEvent e = null;
+        String line = e.data;
+
         if (status == null) {
             Matcher statusMatcher = STATUS_PATTERN.matcher(line);
             if (statusMatcher.matches()) {
@@ -117,13 +114,12 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-        Throwable error = e.getCause();
+    public void exceptionCaught(ChannelHandlerContext context, Throwable error) throws Exception {
         if(error instanceof ConnectException) {
             error = new EventSourceException("Failed to connect to " + uri, error);
         }
         eventSourceHandler.onError(error);
-        ctx.getChannel().close();
+        context.channel().close();
     }
 
     public void setReconnectionTimeMillis(long reconnectionTimeMillis) {
@@ -145,7 +141,7 @@ public class EventSourceChannelHandler extends SimpleChannelUpstreamHandler impl
 
     public EventSourceChannelHandler join() throws InterruptedException {
         if (channel != null) {
-            channel.getCloseFuture().await();
+            channel.closeFuture().await();
         }
         return this;
     }

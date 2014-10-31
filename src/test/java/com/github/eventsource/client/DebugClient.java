@@ -24,6 +24,8 @@ public class DebugClient {
         });
 
         es.connect();
+        Thread.sleep(10000);
+
         new CountDownLatch(1).await();
     }
 }
