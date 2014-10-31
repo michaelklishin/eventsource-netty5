@@ -119,7 +119,8 @@ public class EventSourceClientTest {
         assertTrue("Didn't get all messages", messageTwoCountdown.await(1000, TimeUnit.MILLISECONDS));
     }
 
-    private void assertSentAndReceived(final List<String> messages) throws IOException, InterruptedException {
+    private void assertSentAndReceived(final List<String> messages) throws IOException, InterruptedException,
+        TimeoutException, ExecutionException {
         startServer(messages);
         CountDownLatch messageCountdown = new CountDownLatch(messages.size());
         startClient(messages, messageCountdown, new CountDownLatch(0), 5000);
@@ -149,13 +150,15 @@ public class EventSourceClientTest {
         eventSource.connect().await();
     }
 
-    private void startServer(final List<String> messagesToSend) throws IOException {
+    private void startServer(final List<String> messagesToSend) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         webServer
                 .add("/es/.*", new org.webbitserver.EventSourceHandler() {
                     @Override
                     public void onOpen(EventSourceConnection connection) throws Exception {
+                        System.out.println("Accepted a new EventSource connection");
                         for (String message : messagesToSend) {
                             String data = message + " " + connection.httpRequest().queryParam("echoThis");
+                            System.out.println("Sending " + data);
                             connection.send(new EventSourceMessage(data));
                         }
                     }
@@ -164,6 +167,8 @@ public class EventSourceClientTest {
                     public void onClose(EventSourceConnection connection) throws Exception {
                     }
                 })
-                .start();
+                .start().
+                get(4, TimeUnit.SECONDS);
+        System.out.println("SSE server is listening on " + webServer.getUri());
     }
 }
