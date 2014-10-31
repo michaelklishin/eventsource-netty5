@@ -158,7 +158,6 @@ public class EventSourceClientTest {
                         System.out.println("Accepted a new EventSource connection");
                         for (String message : messagesToSend) {
                             String data = message + " " + connection.httpRequest().queryParam("echoThis");
-                            System.out.println("Sending " + data);
                             connection.send(new EventSourceMessage(data));
                         }
                     }
