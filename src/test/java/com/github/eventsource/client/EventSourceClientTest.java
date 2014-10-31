@@ -5,15 +5,13 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.webbitserver.EventSourceConnection;
+import org.webbitserver.EventSourceMessage;
 import org.webbitserver.WebServer;
-import org.webbitserver.netty.contrib.EventSourceMessage;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
@@ -30,9 +28,9 @@ public class EventSourceClientTest {
     }
 
     @After
-    public void die() throws IOException, InterruptedException {
+    public void die() throws IOException, InterruptedException, TimeoutException, ExecutionException {
         eventSource.close().join();
-        webServer.stop().join();
+        webServer.stop().get(5, TimeUnit.SECONDS);
     }
 
     @Test
@@ -111,7 +109,7 @@ public class EventSourceClientTest {
         assertTrue("Didn't get 1st message", messageOneCountdown.await(1000, TimeUnit.MILLISECONDS));
 
         System.out.println("Stopping server..");
-        webServer.stop().join();
+        webServer.stop().get(5, TimeUnit.SECONDS);
         System.out.println("Stopped");
         System.out.println("KILLED");
 

@@ -2,7 +2,6 @@ package com.github.eventsource.client;
 
 import org.webbitserver.*;
 import org.webbitserver.EventSourceHandler;
-import org.webbitserver.netty.contrib.EventSourceMessage;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
