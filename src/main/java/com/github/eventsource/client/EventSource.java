@@ -3,10 +3,7 @@ package com.github.eventsource.client;
 import com.github.eventsource.client.impl.AsyncEventSourceHandler;
 import com.github.eventsource.client.impl.netty.EventSourceChannelHandler;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -56,6 +53,7 @@ public class EventSource  {
         bootstrap.
             group(group).
             channel(NioSocketChannel.class).
+            option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000).
             remoteAddress(new InetSocketAddress(uri.getHost(), uri.getPort())).
             handler(new ChannelInitializer<SocketChannel>() {
                 @Override
