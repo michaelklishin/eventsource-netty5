@@ -8,6 +8,7 @@ import com.github.eventsource.client.impl.EventStreamParser;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultHttpRequest;
@@ -52,8 +53,7 @@ public class EventSourceChannelHandler extends SimpleChannelInboundHandler<ByteB
     }
 
     @Override
-    public void channelActive(ChannelHandlerContext context)
-    {
+    public void channelActive(ChannelHandlerContext context) {
         HttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, uri.toString());
         request.headers().add(Names.ACCEPT, "text/event-stream");
         request.headers().add(Names.HOST, uri.getHost());
@@ -64,8 +64,8 @@ public class EventSourceChannelHandler extends SimpleChannelInboundHandler<ByteB
             request.headers().add("Last-Event-ID", lastEventId);
         }
 
-        context.channel().write(request);
         channel = context.channel();
+        channel.writeAndFlush(request);
     }
 
     @Override
