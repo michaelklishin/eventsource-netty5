@@ -1,8 +1,8 @@
-package com.github.eventsource.client;
+package io.opensensors.sse.client;
 
-import com.github.eventsource.client.impl.ConnectionHandler;
-import com.github.eventsource.client.impl.EventStreamParser;
-import com.github.eventsource.client.stubs.StubHandler;
+import io.opensensors.sse.client.impl.ConnectionHandler;
+import io.opensensors.sse.client.impl.EventStreamParser;
+import io.opensensors.sse.client.stubs.StubHandler;
 import org.junit.Before;
 import org.junit.Test;
 

@@ -1,4 +1,4 @@
-package com.github.eventsource.client;
+package io.opensensors.sse.client;
 
 public interface EventSourceHandler {
     void onConnect() throws Exception;

@@ -1,9 +1,9 @@
-package com.github.eventsource.client.impl.netty;
+package io.opensensors.sse.client.impl.netty;
 
-import com.github.eventsource.client.EventSourceException;
-import com.github.eventsource.client.EventSourceHandler;
-import com.github.eventsource.client.impl.ConnectionHandler;
-import com.github.eventsource.client.impl.EventStreamParser;
+import io.opensensors.sse.client.EventSourceException;
+import io.opensensors.sse.client.EventSourceHandler;
+import io.opensensors.sse.client.impl.ConnectionHandler;
+import io.opensensors.sse.client.impl.EventStreamParser;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;

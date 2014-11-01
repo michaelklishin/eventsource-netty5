@@ -1,4 +1,4 @@
-package com.github.eventsource.client;
+package io.opensensors.sse.client;
 
 import org.junit.After;
 import org.junit.Before;
@@ -21,7 +21,7 @@ import static org.webbitserver.WebServers.createWebServer;
 public class EventSourceClientTest {
     public static final int SERVER_PORT = 59504;
     private WebServer webServer;
-    private com.github.eventsource.client.EventSource eventSource;
+    private EventSource eventSource;
 
     @Before
     public void createServer() {
@@ -144,7 +144,7 @@ public class EventSourceClientTest {
             }
 
             @Override
-            public void onMessage(String event, com.github.eventsource.client.MessageEvent message) {
+            public void onMessage(String event, MessageEvent message) {
                 assertEquals(expectedMessages.get(n++) + " yo", message.data);
                 assertEquals("http://localhost:" + SERVER_PORT + "/es/hello?echoThis=yo", message.origin);
                 messageCountdown.countDown();

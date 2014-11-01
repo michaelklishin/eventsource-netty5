@@ -1,7 +1,7 @@
-package com.github.eventsource.client;
+package io.opensensors.sse.client;
 
-import com.github.eventsource.client.impl.AsyncEventSourceHandler;
-import com.github.eventsource.client.impl.netty.EventSourceChannelHandler;
+import io.opensensors.sse.client.impl.AsyncEventSourceHandler;
+import io.opensensors.sse.client.impl.netty.EventSourceChannelHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -33,7 +33,7 @@ public class EventSource  {
     /**
      * Creates a new <a href="http://dev.w3.org/html5/eventsource/">EventSource</a> client. The client will reconnect on 
      * lost connections automatically, unless the connection is closed explicitly by a call to 
-     * {@link com.github.eventsource.client.EventSource#close()}.
+     * {@link EventSource#close()}.
      *
      * For sample usage, see examples at <a href="https://github.com/aslakhellesoy/eventsource-java/tree/master/src/test/java/com/github/eventsource/client">GitHub</a>.
      * 

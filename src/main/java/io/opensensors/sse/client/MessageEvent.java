@@ -1,4 +1,4 @@
-package com.github.eventsource.client;
+package io.opensensors.sse.client;
 
 public class MessageEvent {
     public final String data;

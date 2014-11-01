@@ -1,7 +1,7 @@
-package com.github.eventsource.client.impl;
+package io.opensensors.sse.client.impl;
 
-import com.github.eventsource.client.EventSourceHandler;
-import com.github.eventsource.client.MessageEvent;
+import io.opensensors.sse.client.EventSourceHandler;
+import io.opensensors.sse.client.MessageEvent;
 
 import java.util.concurrent.Executor;
 

@@ -1,4 +1,4 @@
-package com.github.eventsource.client;
+package io.opensensors.sse.client;
 
 import org.webbitserver.*;
 import org.webbitserver.EventSourceHandler;

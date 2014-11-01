@@ -1,8 +1,8 @@
-package com.github.eventsource.client.stubs;
+package io.opensensors.sse.client.stubs;
 
-import com.github.eventsource.client.EventSourceHandler;
-import com.github.eventsource.client.MessageEvent;
-import com.github.eventsource.client.impl.ConnectionHandler;
+import io.opensensors.sse.client.EventSourceHandler;
+import io.opensensors.sse.client.MessageEvent;
+import io.opensensors.sse.client.impl.ConnectionHandler;
 
 import java.util.ArrayList;
 import java.util.HashMap;

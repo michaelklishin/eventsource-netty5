@@ -1,4 +1,4 @@
-package com.github.eventsource.client;
+package io.opensensors.sse.client;
 
 public class EventSourceException extends RuntimeException {
     public EventSourceException(String message, Throwable cause) {
