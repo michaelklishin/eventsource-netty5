@@ -19,12 +19,13 @@ import static org.junit.Assert.assertTrue;
 import static org.webbitserver.WebServers.createWebServer;
 
 public class EventSourceClientTest {
+    public static final int SERVER_PORT = 59504;
     private WebServer webServer;
     private com.github.eventsource.client.EventSource eventSource;
 
     @Before
     public void createServer() {
-        webServer = createWebServer(59504);
+        webServer = createWebServer(SERVER_PORT);
     }
 
     @After
@@ -128,17 +129,21 @@ public class EventSourceClientTest {
     }
 
     private void startClient(final List<String> expectedMessages, final CountDownLatch messageCountdown, final CountDownLatch errorCountdown, long reconnectionTimeMillis) throws InterruptedException {
-        eventSource = new EventSource(Executors.newSingleThreadExecutor(), reconnectionTimeMillis, URI.create("http://localhost:59504/es/hello?echoThis=yo"), new EventSourceHandler() {
+        eventSource = new EventSource(Executors.newSingleThreadExecutor(),
+                                      reconnectionTimeMillis,
+                                      URI.create("http://localhost:"  + SERVER_PORT + "/es/hello?echoThis=yo"),
+                                      new EventSourceHandler() {
             int n = 0;
 
             @Override
             public void onConnect() {
+                System.out.println("Client connected");
             }
 
             @Override
             public void onMessage(String event, com.github.eventsource.client.MessageEvent message) {
                 assertEquals(expectedMessages.get(n++) + " yo", message.data);
-                assertEquals("http://localhost:59504/es/hello?echoThis=yo", message.origin);
+                assertEquals("http://localhost:" + SERVER_PORT + "/es/hello?echoThis=yo", message.origin);
                 messageCountdown.countDown();
             }
 

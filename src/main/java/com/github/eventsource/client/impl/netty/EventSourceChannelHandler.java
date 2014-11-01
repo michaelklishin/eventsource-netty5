@@ -2,11 +2,9 @@ package com.github.eventsource.client.impl.netty;
 
 import com.github.eventsource.client.EventSourceException;
 import com.github.eventsource.client.EventSourceHandler;
-import com.github.eventsource.client.MessageEvent;
 import com.github.eventsource.client.impl.ConnectionHandler;
 import com.github.eventsource.client.impl.EventStreamParser;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -25,7 +23,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class EventSourceChannelHandler extends SimpleChannelInboundHandler<ByteBuf> implements ConnectionHandler {
+@ChannelHandler.Sharable
+public class EventSourceChannelHandler extends SimpleChannelInboundHandler<String> implements ConnectionHandler {
     private static final Pattern STATUS_PATTERN = Pattern.compile("HTTP/1.1 (\\d+) (.*)");
     private static final Pattern CONTENT_TYPE_PATTERN = Pattern.compile("Content-Type: text/event-stream");
 
@@ -77,9 +76,8 @@ public class EventSourceChannelHandler extends SimpleChannelInboundHandler<ByteB
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
-        MessageEvent e = null;
-        String line = e.data;
+    public void messageReceived(ChannelHandlerContext ctx, String in) throws Exception {
+        String line = in;
 
         if (status == null) {
             Matcher statusMatcher = STATUS_PATTERN.matcher(line);
@@ -115,6 +113,8 @@ public class EventSourceChannelHandler extends SimpleChannelInboundHandler<ByteB
 
     @Override
     public void exceptionCaught(ChannelHandlerContext context, Throwable error) throws Exception {
+        error.printStackTrace();
+        System.out.println("in exceptionCaught");
         if(error instanceof ConnectException) {
             error = new EventSourceException("Failed to connect to " + uri, error);
         }
