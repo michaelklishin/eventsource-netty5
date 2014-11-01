@@ -78,6 +78,7 @@ public class EventStreamParser {
         try {
             eventSourceHandler.onMessage(eventName, message);
         } catch (Exception e) {
+            e.printStackTrace();
             eventSourceHandler.onError(e);
         }
         data = new StringBuffer();

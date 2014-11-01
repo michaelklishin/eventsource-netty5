@@ -128,7 +128,10 @@ public class EventSourceClientTest {
         assertTrue("Didn't get all messages", messageCountdown.await(1000, TimeUnit.MILLISECONDS));
     }
 
-    private void startClient(final List<String> expectedMessages, final CountDownLatch messageCountdown, final CountDownLatch errorCountdown, long reconnectionTimeMillis) throws InterruptedException {
+    private void startClient(final List<String> expectedMessages,
+                             final CountDownLatch messageCountdown,
+                             final CountDownLatch errorCountdown,
+                             long reconnectionTimeMillis) throws InterruptedException {
         eventSource = new EventSource(Executors.newSingleThreadExecutor(),
                                       reconnectionTimeMillis,
                                       URI.create("http://localhost:"  + SERVER_PORT + "/es/hello?echoThis=yo"),
@@ -149,11 +152,10 @@ public class EventSourceClientTest {
 
             @Override
             public void onError(Throwable t) {
-                t.printStackTrace();
                 errorCountdown.countDown();
             }
         });
-        eventSource.connect().await();
+        eventSource.connect();
     }
 
     private void startServer(final List<String> messagesToSend) throws IOException, InterruptedException, ExecutionException, TimeoutException {

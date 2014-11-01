@@ -77,10 +77,10 @@ public class EventSource  {
 
     public ChannelFuture connect() throws InterruptedException {
         readyState = CONNECTING;
-        ChannelFuture channel = bootstrap.connect().sync();
+        ChannelFuture channel = bootstrap.connect();
         readyState = OPEN;
         try {
-            final ChannelFuture result = channel.channel().closeFuture().sync();
+            final ChannelFuture result = channel.channel().closeFuture();
             return result;
         } finally {
             readyState = CLOSED;

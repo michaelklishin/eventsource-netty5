@@ -76,9 +76,7 @@ public class EventSourceChannelHandler extends SimpleChannelInboundHandler<Strin
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, String in) throws Exception {
-        String line = in;
-
+    public void messageReceived(ChannelHandlerContext ctx, String line) throws Exception {
         if (status == null) {
             Matcher statusMatcher = STATUS_PATTERN.matcher(line);
             if (statusMatcher.matches()) {
@@ -113,8 +111,6 @@ public class EventSourceChannelHandler extends SimpleChannelInboundHandler<Strin
 
     @Override
     public void exceptionCaught(ChannelHandlerContext context, Throwable error) throws Exception {
-        error.printStackTrace();
-        System.out.println("in exceptionCaught");
         if(error instanceof ConnectException) {
             error = new EventSourceException("Failed to connect to " + uri, error);
         }
