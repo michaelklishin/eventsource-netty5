@@ -144,6 +144,7 @@ public class EventSourceClientTest {
 
             @Override
             public void onError(Throwable t) {
+                t.printStackTrace();
                 errorCountdown.countDown();
             }
         });
