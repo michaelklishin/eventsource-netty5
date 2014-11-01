@@ -9,6 +9,11 @@ a client for Server-Sent Events. It is built with Netty 5.
 TBD
 
 
+## Documentation
+
+TBD
+
+
 ## Running Tests
 
 To run all tests, use
