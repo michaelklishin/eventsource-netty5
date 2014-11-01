@@ -9,7 +9,6 @@ import org.webbitserver.EventSourceMessage;
 import org.webbitserver.WebServer;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.*;
