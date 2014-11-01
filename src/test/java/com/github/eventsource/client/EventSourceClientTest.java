@@ -9,6 +9,7 @@ import org.webbitserver.EventSourceMessage;
 import org.webbitserver.WebServer;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.*;
@@ -56,12 +57,12 @@ public class EventSourceClientTest {
         CountDownLatch errorCountdown = new CountDownLatch(1);
         startClient(messages, messageCountdown, errorCountdown, 100);
         startServer(messages);
-        assertTrue("Didn't get an error on first failed connection", errorCountdown.await(2000, TimeUnit.MILLISECONDS));
-        assertTrue("Didn't get all messages", messageCountdown.await(2000, TimeUnit.MILLISECONDS));
+        assertTrue("Didn't get an error on first failed connection", errorCountdown.await(2, TimeUnit.SECONDS));
+        assertTrue("Didn't get all messages", messageCountdown.await(3, TimeUnit.SECONDS));
     }
 
     @Test
-    @Ignore // Because of https://github.com/joewalnes/webbit/issues/29
+    @Ignore // Because of https://github.com/webbit/webbit/issues/29
     public void reconnectsIfServerGoesDownAfterConnectionEstablished() throws Exception {
         final CountDownLatch messageOneCountdown = new CountDownLatch(1);
         final CountDownLatch messageTwoCountdown = new CountDownLatch(1);
@@ -155,7 +156,11 @@ public class EventSourceClientTest {
                 errorCountdown.countDown();
             }
         });
-        eventSource.connect();
+        try {
+            eventSource.connect();
+        } catch (Throwable t) {
+            errorCountdown.countDown();
+        }
     }
 
     private void startServer(final List<String> messagesToSend) throws IOException, InterruptedException, ExecutionException, TimeoutException {

@@ -25,6 +25,7 @@ public class EventSource  {
     public static final int CLOSED = 2;
 
     private final Bootstrap bootstrap;
+    private final EventSourceHandler eventSourceHandler;
     private final EventSourceChannelHandler clientHandler;
 
     private int readyState;
@@ -46,7 +47,7 @@ public class EventSource  {
         EventLoopGroup group = new NioEventLoopGroup();
 
         bootstrap = new Bootstrap();
-
+        this.eventSourceHandler = eventSourceHandler;
         clientHandler = new EventSourceChannelHandler(new AsyncEventSourceHandler(executor, eventSourceHandler),
                                                       reconnectionTimeMillis, bootstrap, uri);
 
@@ -77,14 +78,22 @@ public class EventSource  {
 
     public ChannelFuture connect() throws InterruptedException {
         readyState = CONNECTING;
-        ChannelFuture channel = bootstrap.connect();
-        readyState = OPEN;
-        try {
-            final ChannelFuture result = channel.channel().closeFuture();
-            return result;
-        } finally {
-            readyState = CLOSED;
-        }
+
+        final ChannelFuture cf = bootstrap.connect();
+        cf.addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                if(future.isSuccess()) {
+                    readyState = OPEN;
+                } else {
+                    readyState = CLOSED;
+                    if(future.cause() != null) {
+                        eventSourceHandler.onError(future.cause());
+                    }
+                }
+            }
+        });
+        return cf.sync();
     }
 
     /**

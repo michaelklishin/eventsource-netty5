@@ -109,6 +109,7 @@ public class EventSourceChannelHandler extends SimpleChannelInboundHandler<Strin
 
     @Override
     public void exceptionCaught(ChannelHandlerContext context, Throwable error) throws Exception {
+        System.out.println("in exceptionCaught");
         if(error instanceof ConnectException) {
             error = new EventSourceException("Failed to connect to " + uri, error);
         }
