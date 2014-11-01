@@ -14,7 +14,6 @@ import io.netty.handler.codec.string.StringDecoder;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.nio.channels.Channels;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -48,7 +47,8 @@ public class EventSource  {
 
         bootstrap = new Bootstrap();
 
-        clientHandler = new EventSourceChannelHandler(new AsyncEventSourceHandler(executor, eventSourceHandler), reconnectionTimeMillis, bootstrap, uri);
+        clientHandler = new EventSourceChannelHandler(new AsyncEventSourceHandler(executor, eventSourceHandler),
+                                                      reconnectionTimeMillis, bootstrap, uri);
 
         bootstrap.
             group(group).
@@ -78,7 +78,13 @@ public class EventSource  {
     public ChannelFuture connect() throws InterruptedException {
         readyState = CONNECTING;
         ChannelFuture channel = bootstrap.connect().sync();
-        return channel.channel().closeFuture().sync();
+        readyState = OPEN;
+        try {
+            final ChannelFuture result = channel.channel().closeFuture().sync();
+            return result;
+        } finally {
+            readyState = CLOSED;
+        }
     }
 
     /**
