@@ -53,7 +53,7 @@ public class EventSource  {
         bootstrap.
             group(group).
             channel(NioSocketChannel.class).
-            option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000).
+            option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000).
             remoteAddress(new InetSocketAddress(uri.getHost(), uri.getPort())).
             handler(new ChannelInitializer<SocketChannel>() {
                 @Override
